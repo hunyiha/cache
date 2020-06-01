@@ -1,6 +1,7 @@
 package com.example.guava.cache.service.impl;
 
 import cn.hutool.core.thread.ThreadUtil;
+import com.example.guava.cache.pojo.Student;
 import com.example.guava.cache.service.UserService;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -31,12 +33,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class UserServiceImpl implements UserService {
 
-    ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+    ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(5));
 
     AtomicInteger atomic = new AtomicInteger(0);
 
     LoadingCache<String, List<String>> cache = CacheBuilder.newBuilder()
-            .refreshAfterWrite(30, TimeUnit.SECONDS)
+            .refreshAfterWrite(5, TimeUnit.SECONDS)
             .build(CacheLoader.asyncReloading(new CacheLoader<String, List<String>>() {
                 @Override
                 public List<String> load(String key) throws Exception {
@@ -59,7 +61,6 @@ public class UserServiceImpl implements UserService {
     public int change() {
         return atomic.getAndIncrement();
     }
-
 
     public int change(String location){
         int increment = atomic.getAndIncrement();
